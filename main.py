@@ -1,4 +1,9 @@
+import sys
 import numpy as np
+import pygame
+
+white=(255,255,255)
+black=(0,0,0)
 row_count=6
 col_count=7
 def board():
@@ -44,6 +49,11 @@ def check_win(b, ball):
     return False
 
 
+def darw_UI_board(b):
+    for i in range(col_count):
+        for j in range(row_count):
+            pygame.draw.rect(screen,white,(i*box_size , j*box_size+box_size , box_size , box_size))
+            pygame.draw.circle(screen,black,(int(i*box_size+box_size/2),int(j*box_size+box_size+box_size/2)),radius)
 
 
 
@@ -52,28 +62,44 @@ flip_board(b)
 turn=0
 game_over= False
 
+pygame.init()
+box_size=80
+width = col_count*box_size
+height=(row_count+1)*box_size
+size=(width,height)
+radius=int(box_size/2 - 5)
+screen=pygame.display.set_mode(size)
+darw_UI_board(b)
+pygame.display.update()
 while not game_over:
-    if turn==0:
-        column=int(input("player 1: Make your selection between (0-6) : "))
 
-        if is_valid_column(b,column):
-            row = check_row(b,column)
-            ball_placement(b,row,column,1)
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            sys.exit()
 
-            if check_win(b,1):
-                print("PLAYER 1 WINSS ! ")
-                game_over = True;
-    else:
-        column=int(input("player 2: Make your selection between (0-6) : "))
-
-        if is_valid_column(b, column):
-            row = check_row(b, column)
-            ball_placement(b, row, column, 2)
-            if check_win(b, 2):
-                print("PLAYER 2 WINSS ! ")
-                game_over = True;
-
-    flip_board(b)
-
-    turn+=1
-    turn = turn % 2
+        if event.type==pygame.MOUSEBUTTONDOWN:
+            continue
+            # if turn == 0:
+            #     column = int(input("player 1: Make your selection between (0-6) : "))
+            #
+            #     if is_valid_column(b, column):
+            #         row = check_row(b, column)
+            #         ball_placement(b, row, column, 1)
+            #
+            #         if check_win(b, 1):
+            #             print("PLAYER 1 WINSS ! ")
+            #             game_over = True;
+            # else:
+            #     column = int(input("player 2: Make your selection between (0-6) : "))
+            #
+            #     if is_valid_column(b, column):
+            #         row = check_row(b, column)
+            #         ball_placement(b, row, column, 2)
+            #         if check_win(b, 2):
+            #             print("PLAYER 2 WINSS ! ")
+            #             game_over = True;
+            #
+            # flip_board(b)
+            #
+            # turn += 1
+            # turn = turn % 2
