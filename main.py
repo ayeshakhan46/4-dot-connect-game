@@ -1,9 +1,12 @@
 import sys
 import numpy as np
 import pygame
+import  math
 
 white=(255,255,255)
 black=(0,0,0)
+red =(255,0,0)
+yellow=(255,255,0)
 row_count=6
 col_count=7
 def board():
@@ -53,9 +56,15 @@ def darw_UI_board(b):
     for i in range(col_count):
         for j in range(row_count):
             pygame.draw.rect(screen,white,(i*box_size , j*box_size+box_size , box_size , box_size))
-            pygame.draw.circle(screen,black,(int(i*box_size+box_size/2),int(j*box_size+box_size+box_size/2)),radius)
+            pygame.draw.circle(screen, black,(int(i * box_size + box_size / 2), int(j * box_size + box_size + box_size / 2)), radius)
+    for i in range(col_count):
+        for j in range(row_count):
+            if b[j][i] == 1:
+                pygame.draw.circle(screen, red,(int(i * box_size + box_size / 2),height-int(j * box_size  + box_size / 2)),radius)
+            elif b[j][i]==2:
+                pygame.draw.circle(screen, yellow,(int(i * box_size + box_size / 2), height-int(j * box_size  + box_size / 2)),radius)
 
-
+    pygame.display.update()
 
 b=board()
 flip_board(b)
@@ -63,7 +72,7 @@ turn=0
 game_over= False
 
 pygame.init()
-box_size=80
+box_size = 80
 width = col_count*box_size
 height=(row_count+1)*box_size
 size=(width,height)
@@ -71,35 +80,50 @@ radius=int(box_size/2 - 5)
 screen=pygame.display.set_mode(size)
 darw_UI_board(b)
 pygame.display.update()
+myfont = pygame.font.SysFont("monospace",60)
 while not game_over:
 
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
             sys.exit()
+        if event.type == pygame.MOUSEMOTION:
+            pygame.draw.rect(screen,black,(0,0,width,box_size))
+            posx = event.pos[0]
+            if turn == 0:
+                pygame.draw.circle(screen,red,(posx,int(box_size/2)),radius)
+            else:
+                pygame.draw.circle(screen, yellow, (posx, int(box_size / 2)), radius)
+        pygame.display.update()
 
-        if event.type==pygame.MOUSEBUTTONDOWN:
-            continue
-            # if turn == 0:
-            #     column = int(input("player 1: Make your selection between (0-6) : "))
-            #
-            #     if is_valid_column(b, column):
-            #         row = check_row(b, column)
-            #         ball_placement(b, row, column, 1)
-            #
-            #         if check_win(b, 1):
-            #             print("PLAYER 1 WINSS ! ")
-            #             game_over = True;
-            # else:
-            #     column = int(input("player 2: Make your selection between (0-6) : "))
-            #
-            #     if is_valid_column(b, column):
-            #         row = check_row(b, column)
-            #         ball_placement(b, row, column, 2)
-            #         if check_win(b, 2):
-            #             print("PLAYER 2 WINSS ! ")
-            #             game_over = True;
-            #
-            # flip_board(b)
-            #
-            # turn += 1
-            # turn = turn % 2
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pygame.draw.rect(screen, black, (0, 0, width, box_size))
+            if turn == 0:
+                posx = event.pos[0]
+                column = int(math.floor(posx/box_size))
+
+                if is_valid_column(b, column):
+                    row = check_row(b, column)
+                    ball_placement(b, row, column, 1)
+
+                    if check_win(b, 1):
+                       label = myfont.render("PLAYER 1 WINSS!!!",1,red)
+                       screen.blit(label,(40,10))
+                       game_over = True
+            else:
+                posx = event.pos[0]
+                column = int(math.floor(posx / box_size))
+
+                if is_valid_column(b, column):
+                    row = check_row(b, column)
+                    ball_placement(b, row, column, 2)
+                    if check_win(b, 2):
+                        label = myfont.render("PLAYER 1 WINSS!!!", 2, yellow)
+                        screen.blit(label, (40, 10))
+                        game_over = True
+
+            flip_board(b)
+            darw_UI_board(b)
+            turn += 1
+            turn = turn % 2
+            if game_over:
+                pygame.time.wait(3000)
