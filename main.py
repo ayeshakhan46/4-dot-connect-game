@@ -20,9 +20,9 @@ def board():
     b=np.zeros((row_count,col_count))
     return b
 
-def ball_placement(b,row,column,ball):
+def ball_placement(b,row,column,ball):#DROP_PIECE
      b[row][column]=ball
-def check_row(b,column):
+def check_row(b,column): #get_next_opem_row
     for i in range(row_count):
         if b[i][column]==0:
             return i
@@ -58,17 +58,91 @@ def check_win(b, ball):
 
     return False
 
+def eval_window(window,ball):#evaluate_window
+    opp_piece = human_ball
+    if ball == human_ball:
+        opp_piece=AI_ball
+    score=0
+    if window.count(ball) == 4:
+        score+=100
+    elif window.count(ball)==3 and window.count(empty)==1:
+        score+=10
+    elif window.count(ball)==2 and window.count(empty)==2:
+        score+=5
+    if window.count(opp_piece)==3 and window.count(empty)==1:
+        score-= 80
+
+    return score
+
+
+
 def win_position(b,ball): #score_position
     score=0
+    center_arr=[int(k) for k in list(b[:,col_count//2])]
+    center_count= center_arr.count(ball)
+    score+=center_count*6
+
     for i in range(row_count):
-        row_arr=[int(i) for i in list(b[i,:])]
+        row_arr=[int(k) for k in list(b[i,:])]
         for j in range(col_count-3):
             window=row_arr[j:j+win_length]
-            if window.count(ball)==4:
-                score+=100
-            elif window.count(ball)==3 and window.count(empty)==1:
-                score+=10
+            score+=eval_window(window,ball)
+
+    ##score vertical
+    for j in range(col_count):
+        col_arr=[int(k) for k in list(b[:,j])]
+        for i in range(row_count-3):
+            window=col_arr[i:i+win_length]
+            score += eval_window(window, ball)
+
+    #score diagnoal
+    for i in range(row_count-3):
+        for j in range(col_count-3):
+            window = [b[i+k][j+k]for k in range(win_length)]
+            score += eval_window(window, ball)
+
+    for i in range(row_count-3):
+        for j in range(col_count-3):
+            window = [b[i+3-k][j+k]for k in range(win_length)]
+            score += eval_window(window, ball)
+
+
     return score
+def find_terminal_node(b):#is_terminal_node
+    return check_win(b,human_ball) or check_win(b,AI_ball) or len(get_valid_locations(b))==0
+def minmax_algo(b,depth,maximizingplayer):#minmax
+    valid_location = get_valid_locations(b)
+    terminal_node=find_terminal_node(b)
+    if depth==0 or terminal_node:
+        if terminal_node:
+            if check_win(b, AI_ball):
+                return 100000000000000
+            elif check_win(b, human_ball):
+                return -10000000000000
+            else: #when game is over
+                return 0
+        else:
+            return win_position(b,AI_ball)
+    if maximizingplayer:
+        value = -math.inf
+        for j in valid_location:
+            i = check_row(b,column)
+            b_copy= b.copy()
+            ball_placement(b_copy,row,column,AI_ball)
+            new_score =max(value,minmax_algo(b_copy,depth-1,False))
+            return new_score
+    else: #minimizing player
+        value = math.inf
+        for j in valid_location:
+            i=check_row(b,column)
+            b_copy = b.copy()
+            ball_placement(b_copy,row,column,human_ball)
+            new_score=min(value,minmax_algo(b_copy,depth-1,True))
+            return new_score
+
+
+    pass
+
 def get_valid_locations(b):
     valid_locations=[]
     for i in range(col_count):
@@ -78,7 +152,7 @@ def get_valid_locations(b):
 
 def best_score(b,ball): #pick_best_move
     valid_locatons=get_valid_locations(b)
-    best_score=0
+    best_score=-1000
     best_col=random.choice(valid_locatons)
     for i in valid_locatons:
         row = check_row(b,i)
