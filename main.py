@@ -111,11 +111,11 @@ while not game_over:
                        screen.blit(label,(40,10))
                        game_over = True
 
-                       turn += 1
-                       turn = turn % 2
+                    turn += 1
+                    turn = turn % 2
 
-                       flip_board(b)
-                       darw_UI_board(b)
+                       # flip_board(b)
+                       # darw_UI_board(b)
     if turn == AI and not game_over:
         column = random.randint(0, col_count - 1)
 
