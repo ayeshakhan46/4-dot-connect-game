@@ -12,6 +12,10 @@ row_count=6
 col_count=7
 human=0 #player
 AI=1
+human_ball=1
+AI_ball= 2
+win_length=4 #window_length
+empty=0
 def board():
     b=np.zeros((row_count,col_count))
     return b
@@ -54,7 +58,37 @@ def check_win(b, ball):
 
     return False
 
+def win_position(b,ball): #score_position
+    score=0
+    for i in range(row_count):
+        row_arr=[int(i) for i in list(b[i,:])]
+        for j in range(col_count-3):
+            window=row_arr[j:j+win_length]
+            if window.count(ball)==4:
+                score+=100
+            elif window.count(ball)==3 and window.count(empty)==1:
+                score+=10
+    return score
+def get_valid_locations(b):
+    valid_locations=[]
+    for i in range(col_count):
+        if is_valid_column(b,i):
+            valid_locations.append(i)
+    return valid_locations
 
+def best_score(b,ball): #pick_best_move
+    valid_locatons=get_valid_locations(b)
+    best_score=0
+    best_col=random.choice(valid_locatons)
+    for i in valid_locatons:
+        row = check_row(b,i)
+        temp_board=b.copy()
+        ball_placement(temp_board,row,i,ball)
+        score= win_position(temp_board,ball)
+        if best_score>score:
+            best_col=i
+
+    return best_col
 def darw_UI_board(b):
     for i in range(col_count):
         for j in range(row_count):
@@ -62,9 +96,9 @@ def darw_UI_board(b):
             pygame.draw.circle(screen, black,(int(i * box_size + box_size / 2), int(j * box_size + box_size + box_size / 2)), radius)
     for i in range(col_count):
         for j in range(row_count):
-            if b[j][i] == 1:
+            if b[j][i] == human_ball:
                 pygame.draw.circle(screen, red,(int(i * box_size + box_size / 2),height-int(j * box_size  + box_size / 2)),radius)
-            elif b[j][i]==2:
+            elif b[j][i]==AI_ball:
                 pygame.draw.circle(screen, yellow,(int(i * box_size + box_size / 2), height-int(j * box_size  + box_size / 2)),radius)
 
     pygame.display.update()
@@ -104,26 +138,28 @@ while not game_over:
 
                 if is_valid_column(b, column):
                     row = check_row(b, column)
-                    ball_placement(b, row, column, 1)
+                    ball_placement(b, row, column, human_ball)
 
-                    if check_win(b, 1):
+                    if check_win(b, human_ball):
                        label = myfont.render("PLAYER 1 WINSS!!!",1,red)
                        screen.blit(label,(40,10))
                        game_over = True
 
                     turn += 1
                     turn = turn % 2
+                    flip_board(b)
+                    darw_UI_board(b)
 
-                       # flip_board(b)
-                       # darw_UI_board(b)
+
     if turn == AI and not game_over:
-        column = random.randint(0, col_count - 1)
+        column=best_score(b,AI_ball)
+        # column = random.randint(0, col_count - 1)
 
         if is_valid_column(b, column):
             pygame.time.wait(500)
             row = check_row(b, column)
-            ball_placement(b, row, column, 2)
-            if check_win(b, 2):
+            ball_placement(b, row, column, AI_ball)
+            if check_win(b, AI_ball):
                 label = myfont.render("PLAYER 2 WINSS!!!", 2, yellow)
                 screen.blit(label, (40, 10))
                 game_over = True
