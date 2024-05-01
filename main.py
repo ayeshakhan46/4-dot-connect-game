@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import random
 import pygame
 import  math
 
@@ -9,6 +10,8 @@ red =(255,0,0)
 yellow=(255,255,0)
 row_count=6
 col_count=7
+human=0 #player
+AI=1
 def board():
     b=np.zeros((row_count,col_count))
     return b
@@ -68,7 +71,6 @@ def darw_UI_board(b):
 
 b=board()
 flip_board(b)
-turn=0
 game_over= False
 
 pygame.init()
@@ -81,6 +83,7 @@ screen=pygame.display.set_mode(size)
 darw_UI_board(b)
 pygame.display.update()
 myfont = pygame.font.SysFont("monospace",60)
+turn=random.randint(human,AI)
 while not game_over:
 
     for event in pygame.event.get():
@@ -89,15 +92,13 @@ while not game_over:
         if event.type == pygame.MOUSEMOTION:
             pygame.draw.rect(screen,black,(0,0,width,box_size))
             posx = event.pos[0]
-            if turn == 0:
+            if turn == human:
                 pygame.draw.circle(screen,red,(posx,int(box_size/2)),radius)
-            else:
-                pygame.draw.circle(screen, yellow, (posx, int(box_size / 2)), radius)
         pygame.display.update()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             pygame.draw.rect(screen, black, (0, 0, width, box_size))
-            if turn == 0:
+            if turn == human:
                 posx = event.pos[0]
                 column = int(math.floor(posx/box_size))
 
@@ -109,21 +110,28 @@ while not game_over:
                        label = myfont.render("PLAYER 1 WINSS!!!",1,red)
                        screen.blit(label,(40,10))
                        game_over = True
-            else:
-                posx = event.pos[0]
-                column = int(math.floor(posx / box_size))
 
-                if is_valid_column(b, column):
-                    row = check_row(b, column)
-                    ball_placement(b, row, column, 2)
-                    if check_win(b, 2):
-                        label = myfont.render("PLAYER 1 WINSS!!!", 2, yellow)
-                        screen.blit(label, (40, 10))
-                        game_over = True
+                       turn += 1
+                       turn = turn % 2
+
+                       flip_board(b)
+                       darw_UI_board(b)
+    if turn == AI and not game_over:
+        column = random.randint(0, col_count - 1)
+
+        if is_valid_column(b, column):
+            pygame.time.wait(500)
+            row = check_row(b, column)
+            ball_placement(b, row, column, 2)
+            if check_win(b, 2):
+                label = myfont.render("PLAYER 2 WINSS!!!", 2, yellow)
+                screen.blit(label, (40, 10))
+                game_over = True
 
             flip_board(b)
             darw_UI_board(b)
             turn += 1
             turn = turn % 2
-            if game_over:
-                pygame.time.wait(3000)
+
+    if game_over:
+        pygame.time.wait(3000)
