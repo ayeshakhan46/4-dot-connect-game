@@ -66,11 +66,11 @@ def eval_window(window,ball):#evaluate_window
     if window.count(ball) == 4:
         score+=100
     elif window.count(ball)==3 and window.count(empty)==1:
-        score+=10
-    elif window.count(ball)==2 and window.count(empty)==2:
         score+=5
+    elif window.count(ball)==2 and window.count(empty)==2:
+        score+=2
     if window.count(opp_piece)==3 and window.count(empty)==1:
-        score-= 80
+        score-= 4
 
     return score
 
@@ -80,7 +80,7 @@ def win_position(b,ball): #score_position
     score=0
     center_arr=[int(k) for k in list(b[:,col_count//2])]
     center_count= center_arr.count(ball)
-    score+=center_count*6
+    score+=center_count*3
 
     for i in range(row_count):
         row_arr=[int(k) for k in list(b[i,:])]
@@ -116,32 +116,44 @@ def minmax_algo(b,depth,maximizingplayer):#minmax
     if depth==0 or terminal_node:
         if terminal_node:
             if check_win(b, AI_ball):
-                return 100000000000000
+                return (None,100000000000000)
             elif check_win(b, human_ball):
-                return -10000000000000
+                return (None,-10000000000000)
             else: #when game is over
-                return 0
+                return (None,0)
         else:
-            return win_position(b,AI_ball)
+            return (None,win_position(b,AI_ball))
     if maximizingplayer:
         value = -math.inf
+        columnn= random.choice(valid_location)
         for j in valid_location:
-            i = check_row(b,column)
+            i = check_row(b,j)
             b_copy= b.copy()
-            ball_placement(b_copy,row,column,AI_ball)
-            new_score =max(value,minmax_algo(b_copy,depth-1,False))
-            return new_score
+            ball_placement(b_copy,i,j,AI_ball)
+            new_score =minmax_algo(b_copy,depth-1,False)[1]
+            if new_score>value:
+                value = new_score
+                columnn=j
+            # alpha = max(alpha,value)
+            # if alpha>=beta:
+            #     break
+
+        return columnn,value
     else: #minimizing player
         value = math.inf
         for j in valid_location:
-            i=check_row(b,column)
+            i=check_row(b,j)
             b_copy = b.copy()
-            ball_placement(b_copy,row,column,human_ball)
-            new_score=min(value,minmax_algo(b_copy,depth-1,True))
-            return new_score
+            ball_placement(b_copy,i,j,human_ball)
+            new_score=minmax_algo(b_copy,depth-1,True)[1]
+            if new_score<value:
+                value = new_score
+                column=j
+            # beta = min(beta,value)
+            # if alpha>=beta:
+            #     break
+        return column,value
 
-
-    pass
 
 def get_valid_locations(b):
     valid_locations=[]
@@ -226,8 +238,9 @@ while not game_over:
 
 
     if turn == AI and not game_over:
-        column=best_score(b,AI_ball)
+        # column=best_score(b,AI_ball)
         # column = random.randint(0, col_count - 1)
+        column,minmax_score = minmax_algo(b,4,True)
 
         if is_valid_column(b, column):
             pygame.time.wait(500)
